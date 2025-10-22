@@ -1,70 +1,133 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <stdbool.h>
 
-// Código da Ilha – Edição Free Fire
-// Nível: Mestre
-// Este programa simula o gerenciamento avançado de uma mochila com componentes coletados durante a fuga de uma ilha.
-// Ele introduz ordenação com critérios e busca binária para otimizar a gestão dos recursos.
+#define MAX_ITENS 10
+#define TAM_NOME 30
+#define TAM_TIPO 20
 
-int main() {
-    // Menu principal com opções:
-    // 1. Adicionar um item
-    // 2. Remover um item
-    // 3. Listar todos os itens
-    // 4. Ordenar os itens por critério (nome, tipo, prioridade)
-    // 5. Realizar busca binária por nome
-    // 0. Sair
+typedef struct {
+    char nome[TAM_NOME];
+    char tipo[TAM_TIPO];
+    int quantidade;
+} Item;
 
-    // A estrutura switch trata cada opção chamando a função correspondente.
-    // A ordenação e busca binária exigem que os dados estejam bem organizados.
+void inserirItem(Item itens[], int *qtd);
+void removerItem(Item itens[], int *qtd);
+void listarItens(const Item itens[], int qtd);
+
+int main(void) {
+    Item mochila[MAX_ITENS];
+    int quantidadeItens = 0;
+    int opcao;
+
+    printf("===============================================\n");
+    printf("     MOCHILA DE SOBREVIVENCIA - INVENTARIO \n");
+    printf("===============================================\n");
+    printf("Capacidade: ate %d itens\n\n", MAX_ITENS);
+
+    do {
+        printf("\n--- MENU ---\n");
+        printf("1) Inserir item\n");
+        printf("2) Remover item\n");
+        printf("3) Listar itens\n");
+        printf("0) Sair\n");
+        printf("--------------------------------------------\n");
+        printf("Escolha uma opcao: ");
+
+        if (scanf("%d", &opcao) != 1) {
+            printf("Entrada invalida. Tente novamente.\n");
+            while (getchar() != '\n'); // Limpa buffer
+            continue;
+        }
+        while (getchar() != '\n'); // Limpa buffer
+
+        switch (opcao) {
+            case 1:
+                inserirItem(mochila, &quantidadeItens);
+                listarItens(mochila, quantidadeItens);
+                break;
+            case 2:
+                removerItem(mochila, &quantidadeItens);
+                listarItens(mochila, quantidadeItens);
+                break;
+            case 3:
+                listarItens(mochila, quantidadeItens);
+                break;
+            case 0:
+                printf("Encerrando... Bom jogo!\n");
+                break;
+            default:
+                printf("Opcao inexistente. Tente novamente.\n");
+        }
+
+    } while (opcao != 0);
 
     return 0;
 }
 
-// Struct Item:
-// Representa um componente com nome, tipo, quantidade e prioridade (1 a 5).
-// A prioridade indica a importância do item na montagem do plano de fuga.
+void inserirItem(Item itens[], int *qtd) {
+    if (*qtd >= MAX_ITENS) {
+        printf("Mochila cheia! Remova algo antes de inserir novo item.\n");
+        return;
+    }
 
-// Enum CriterioOrdenacao:
-// Define os critérios possíveis para a ordenação dos itens (nome, tipo ou prioridade).
+    printf("Nome do item: ");
+    scanf("%29s", itens[*qtd].nome);
 
-// Vetor mochila:
-// Armazena até 10 itens coletados.
-// Variáveis de controle: numItens (quantidade atual), comparacoes (análise de desempenho), ordenadaPorNome (para controle da busca binária).
+    printf("Tipo (ex.: arma, municao, cura): ");
+    scanf("%19s", itens[*qtd].tipo);
 
-// limparTela():
-// Simula a limpeza da tela imprimindo várias linhas em branco.
+    printf("Quantidade: ");
+    if (scanf("%d", &itens[*qtd].quantidade) != 1 || itens[*qtd].quantidade < 0) {
+        printf("Quantidade invalida. Operacao cancelada.\n");
+        while (getchar() != '\n'); // Limpa buffer
+        return;
+    }
+    while (getchar() != '\n'); // Limpa buffer
 
-// exibirMenu():
-// Apresenta o menu principal ao jogador, com destaque para status da ordenação.
+    (*qtd)++;
+    printf("Item \"%s\" inserido com sucesso.\n", itens[*qtd - 1].nome);
+}
 
-// inserirItem():
-// Adiciona um novo componente à mochila se houver espaço.
-// Solicita nome, tipo, quantidade e prioridade.
-// Após inserir, marca a mochila como "não ordenada por nome".
+void removerItem(Item itens[], int *qtd) {
+    if (*qtd == 0) {
+        printf("A mochila esta vazia. Nada para remover.\n");
+        return;
+    }
 
-// removerItem():
-// Permite remover um componente da mochila pelo nome.
-// Se encontrado, reorganiza o vetor para preencher a lacuna.
+    char nomeAlvo[TAM_NOME];
+    printf("Digite o nome do item a remover: ");
+    scanf("%29s", nomeAlvo);
+    while (getchar() != '\n'); // Limpa buffer
 
-// listarItens():
-// Exibe uma tabela formatada com todos os componentes presentes na mochila.
+    int encontrado = 0;
+    for (int i = 0; i < *qtd; i++) {
+        if (strcmp(itens[i].nome, nomeAlvo) == 0) {
+            for (int j = i; j < *qtd - 1; j++) {
+                itens[j] = itens[j + 1];
+            }
+            (*qtd)--;
+            encontrado = 1;
+            printf("Item \"%s\" removido com sucesso.\n", nomeAlvo);
+            break;
+        }
+    }
 
-// menuDeOrdenacao():
-// Permite ao jogador escolher como deseja ordenar os itens.
-// Utiliza a função insertionSort() com o critério selecionado.
-// Exibe a quantidade de comparações feitas (análise de desempenho).
+    if (!encontrado) {
+        printf("Item \"%s\" nao encontrado.\n", nomeAlvo);
+    }
+}
 
-// insertionSort():
-// Implementação do algoritmo de ordenação por inserção.
-// Funciona com diferentes critérios de ordenação:
-// - Por nome (ordem alfabética)
-// - Por tipo (ordem alfabética)
-// - Por prioridade (da mais alta para a mais baixa)
+void listarItens(const Item itens[], int qtd) {
+    printf("\n=== ITENS NA MOCHILA (%d/%d) ===\n", qtd, MAX_ITENS);
+    if (qtd == 0) {
+        printf("(vazio)\n");
+        return;
+    }
 
-// buscaBinariaPorNome():
-// Realiza busca binária por nome, desde que a mochila esteja ordenada por nome.
-// Se encontrar, exibe os dados do item buscado.
-// Caso contrário, informa que não encontrou o item.
+    for (int i = 0; i < qtd; i++) {
+        printf("%2d) Nome: %-28s | Tipo: %-12s | Qtde: %d\n",
+               i + 1, itens[i].nome, itens[i].tipo, itens[i].quantidade);
+    }
+}
